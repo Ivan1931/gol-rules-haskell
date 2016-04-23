@@ -6,4 +6,6 @@ import Test.QuickCheck
 import Test.Hspec
 
 main = hspec $ do
-    cellParsingSpec
+    describe "The truth" $ do
+        it "Is true" $ do 
+            True `shouldBe` True
