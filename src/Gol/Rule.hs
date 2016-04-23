@@ -1,6 +1,6 @@
 module Gol.Rule where
 
-import Gol.Grid (Grid, X, Y, Coord)
+import Gol.Grid (Grid, X, Y, Coord, dimensions, applyToGrid, Cell)
 
 {-|
  - A rule is a function that takes a history of grids and a cell position and
@@ -74,3 +74,9 @@ instance Monad Rule where
             Rule f' = f a
         in
             f' history xy
+
+
+runRule :: Rule Cell -> History -> Grid
+runRule _ [] = error "History must be non-empty"
+runRule (Rule r) history@(recent:_) = applyToGrid ruleWithHistory recent
+    where ruleWithHistory = r history

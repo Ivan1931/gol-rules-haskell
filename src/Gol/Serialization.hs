@@ -1,0 +1,2 @@
+module Gol.Serialization where
+
