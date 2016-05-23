@@ -1,11 +1,9 @@
 module Main where
 
-import GridSpec
+import GridSpec as GridSpec
 import RulesSpec
 import Test.QuickCheck
 import Test.Hspec
 
 main = hspec $ do
-    describe "The truth" $ do
-        it "Is true" $ do 
-            True `shouldBe` True
+    GridSpec.spec

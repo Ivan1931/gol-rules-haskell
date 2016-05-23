@@ -37,6 +37,7 @@ Library
     , Gol.Rules
     , Gol.Render
     , Gol.Serialization
+    , Gol.World
   build-depends:
     base >= 4.7 && < 5
     , containers
