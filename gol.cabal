@@ -2,7 +2,7 @@ name:                gol
 version:             0.1.0.0
 synopsis:            Game of life in haskell
 description:         Please see README.md
-homepage:            http://github.com/githubuser/gol#readme
+homepage:            http://github.com/Ivan1931/gol#readme
 license:             MIT
 license-file:        LICENSE
 author:              Jonah Hooper
@@ -23,7 +23,6 @@ executable gol
     base >= 4.7 && < 5
     , gol
     , containers
-    , gloss
 
 Library
   hs-source-dirs:      
@@ -41,7 +40,11 @@ Library
   build-depends:
     base >= 4.7 && < 5
     , containers
-    , gloss
+    , OpenGL >= 3 && < 3.1
+    , GLUtil >= 0.9 && < 0.10
+    , OpenGLRaw >= 3 && < 3.2
+    , GLUT >= 2.0.0 && <= 2.7.0.10
+    , mtl >= 2.0.0 && <= 2.2.2
     
 
 Test-suite spec
@@ -58,4 +61,3 @@ Test-suite spec
         , gol
         , hspec
         , QuickCheck
-        , gloss

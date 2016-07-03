@@ -1,44 +1,27 @@
 module Gol.World
 (
-    simulateFinite
+    simulateRule
     , simulateInfinite
-    , simulateRule
 )
 where
 
 import Gol.Rule
 import Gol.Grid
 import Gol.Render 
-import Graphics.Gloss (simulate)
-import Graphics.Gloss (Display (InWindow))
-import Graphics.Gloss.Data.ViewPort (ViewPort)
+import Data.IORef (IORef, newIORef, readIORef, atomicModifyIORef')
+import Control.Concurrent (forkIO, threadDelay)
 
 {-
  - Simulates a world in perpetuity
  -}
-simulateInfinite :: Grid -- ^ Seed grid
+simulateInfinite :: History -- ^ Starting History
         -> Rule Cell  -- ^ Rule on which to run the world
         -> History
-simulateInfinite seed rule =
-        foldl step [seed] [1..]
-    where 
-        step history _ = runRule rule history : history
-
-simulateFinite :: Int -- ^ Number of states to produce
-           -> Grid -- ^ Starting grid
-           -> Rule Cell -- ^ Game Rule to apply to grid
-           -> History
-simulateFinite i g r = take i $ simulateInfinite g r
-
-simulateWithWindow :: Int -- ^ size of the window
-               -> Grid -- ^ Starting grid
-               -> Rule Cell -- ^ Game Rule
-               -> History -- ^ An array the size of the starting window
-simulateWithWindow i seed rule =
-        foldl step [seed] [1..]
-    where
-        step history _ = runRule rule history : take i history
-
+simulateInfinite history rule =
+    let
+        next = runRule rule history
+    in
+        next : simulateInfinite (next : history) rule
 
 evolveBoundedHistory :: Rule Cell -> Int -> History -> History
 evolveBoundedHistory rule bound history =
@@ -48,19 +31,26 @@ evolveInfinitely :: Rule Cell -> History -> History
 evolveInfinitely rule history =
     runRule rule history : history
 
-simulateRule :: RenderContext -> History -> Rule Cell -> IO ()
-simulateRule context seed rule =
-    let
-        background = backgroundColor context
-        (w, h)     = screenDimensions context
-        dims       = (round w, round h)
-        origin     = (0, 0)
-        evolve     = evolveInfinitely rule
-    in
-        simulate (InWindow "Game of Life" dims origin) 
-                 background
-                 3
-                 seed
-                 (renderHistory context)
-                 (\_ _ history -> evolve history)
+evolutionLoop :: IORef History -> Rule Cell -> IO ()
+evolutionLoop ref rule = do
+    putStrLn "Starting evolution loop"
+    seed <- readIORef ref
+    mapM_ evolve $ simulateInfinite seed rule
+    where 
+        update recent history = (recent : history, ())
+        millis = 1000
+        evolve recent = do
+            threadDelay (300 * millis)
+            atomicModifyIORef' ref (update recent)
+        
+
+simulateRule :: History -> Rule Cell -> Rule ColorVec -> IO ()
+simulateRule [] _ _ = error "Catastrophic failure: Initial automaton state must be provided"
+simulateRule seed evolutionRule colorRule = do
+    ref <- newIORef seed
+    forkIO (renderLoop ref colorRule)
+    evolutionLoop ref evolutionRule
+    return ()
+
+    
 

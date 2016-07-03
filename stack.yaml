@@ -1,24 +1,12 @@
-resolver: lts-5.5
+resolver: lts-5.7
 
 packages:
 - '.'
 
 extra-deps:
-- OpenGL-2.12.0.1
-- OpenGLRaw-2.5.5.0
-- GLUT-2.7.0.3
-- GLURaw-1.5.0.2
-- GLFW-b-1.4.7.3
-- bindings-GLFW-3.1.1.4
-- ObjectName-1.1.0.0
-- vector-0.10.12.3
-- repa-3.4.0.1
-- repa-io-3.4.0.1
-- repa-algorithms-3.4.0.1
-- gloss-1.9.4.1
-- gloss-algorithms-1.9.4.1
-- gloss-raster-1.9.4.1
-- gloss-rendering-1.9.3.1
+    - hpp-0.3.0.0
+    - GLUtil-0.9.0
+    - GLUT-2.7.0.10
 
 flags: {}
 

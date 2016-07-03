@@ -1,74 +1,107 @@
-module Gol.Render 
-( 
-    render
-    , renderHistory
-    , screenDimensions
-    , backgroundColor
-    , colorRule
-    , RenderContext
-    , ColorRule
-    , makeBlackBackgroundContext
+module Gol.Render
+(
+    renderLoop
+    , color3ify
+    , ColorVec
 )
 where
 
-import Graphics.Gloss
 import Gol.Grid (get, getValues, getCells, Cell, Grid, Coord, dimensions)
-import Gol.Rule (History)
-import Debug.Trace
+import Gol.Rule
+import Gol.Grid (coordsFor)
+import Graphics.UI.GLUT
+import Data.IORef (IORef, readIORef)
 
-data RenderContext = RenderContext {
-                        screenDimensions :: (Float, Float)
-                        , backgroundColor :: Color
-                        , colorRule :: ColorRule
-                   }
+type ColorVec = Color3 GLfloat
+type ColorRule = Rule ColorVec
+type SimulationState = IORef History
+type Location = (GLfloat, GLfloat)
+type Dimension = (GLfloat, GLfloat)
 
-data ColorRule = RenderByThreshold Color Cell
-                | RenderByHighestValue Color
-                | Other (Grid -> (Coord, Cell) -> Color)
+renderSquare :: Dimension -> Location -> IO ()
+renderSquare (w, h) (x, y) =
+    renderPrimitive Quads $ do
+        vertex $ Vertex2 leftX topY
+        vertex $ Vertex2 rightX topY
+        vertex $ Vertex2 rightX bottomY
+        vertex $ Vertex2 leftX bottomY
+    where
+         leftX = x
+         rightX = x + w
+         topY = y
+         bottomY = y + h
 
-makeBlackBackgroundContext :: (Float, Float) -> RenderContext
-makeBlackBackgroundContext dims = RenderContext dims black (RenderByThreshold white 1.0)
-
-width :: Float
-width = 25.0
-
-clamp :: Cell -> Cell -> Cell
-clamp cell maxValue 
-    | cell <= maxValue = cell
-    | otherwise = maxValue
-
-deriveColorFunction :: Grid -> ColorRule -> ((Coord, Cell) -> Color)
-deriveColorFunction _ (RenderByThreshold base threshold) = \ (_, cell) ->
+renderScene :: ColorRule -> History -> IO ()
+renderScene (Rule r) history@(mostRecent:_) =
     let
-        (r, g, b, a) = rgbaOfColor base
-        intensity    = clamp 1.0 (cell / threshold)
+        (cellWidth, cellHeight) = dimensions mostRecent
+        graphicalWidth = 2.0 / (fromIntegral cellWidth)
+        graphicalHeight = 2.0 / (fromIntegral cellHeight)
+        renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
+        drawCell (x, y) = color (r history (x, y)) >> renderSquare' (graphicalX, graphicalY)
+            where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
+                  graphicalY = (fromIntegral y) * graphicalHeight - 1.0
     in
-        makeColor (r * intensity) (g * intensity) (b * intensity) a
-deriveColorFunction grid (RenderByHighestValue base) = \ (_, cell) ->
-    let
-        (r, g, b, a) = rgbaOfColor base
-        maxCell = maximum $ getCells grid
-        intensity = if maxCell <= 0.0 then 0.0 else maxCell / cell
-    in
-        makeColor (r * intensity) (g * intensity) (b * intensity) a
-deriveColorFunction grid (Other f) = f grid
-    
-render :: RenderContext -> Grid -> Picture
-render renderContext grid =
-    let
-        (screenWidth, screenHeight) = screenDimensions renderContext
-        (gridWidth, gridHeight)     = dimensions $ traceShow grid grid
-        blockHeight                 = screenWidth / (fromIntegral gridWidth)
-        blockWidth                  = screenHeight / (fromIntegral gridHeight)
-        rule                        = colorRule renderContext
-        colorFunction               = deriveColorFunction grid rule
-        renderCell cellInfo@((x, y), cell) = 
-            color (colorFunction cellInfo) $ translate x' y' $ rectangleSolid blockWidth blockHeight
-            where 
-                x' = (fromIntegral x) * width
-                y' = (fromIntegral y) * width
-    in
-        pictures $ map renderCell (getValues grid)
+        mapM_ drawCell $ coordsFor cellWidth cellHeight
 
-renderHistory :: RenderContext -> History -> Picture
-renderHistory renderContext (recent:_) = render renderContext recent
+cube :: GLfloat -> IO ()
+cube w = do
+  renderPrimitive Quads $ do
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 (-w) w (-w)
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 w w w
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 (-w) w w
+    vertex $ Vertex3 (-w) w (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 w (-w) w
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) w
+    vertex $ Vertex3 w w (-w)
+    vertex $ Vertex3 w (-w) (-w)
+    vertex $ Vertex3 (-w) (-w) (-w)
+    vertex $ Vertex3 (-w) w (-w)
+
+unmarshalAndRender :: ColorRule -> SimulationState -> IO ()
+unmarshalAndRender rule ioState = do
+    state <- readIORef ioState
+    clear [ColorBuffer]
+    renderScene rule state
+    flush
+
+reshape :: ReshapeCallback
+reshape size = do
+  viewport $= (Position 0 0, size)
+
+keyboardMouse :: KeyboardMouseCallback
+keyboardMouse _key _state _modifiers _position = return ()
+
+display :: ColorRule -> SimulationState -> DisplayCallback
+display rule ioState = unmarshalAndRender rule ioState
+
+idle :: ColorRule -> SimulationState -> IdleCallback
+idle rule state = unmarshalAndRender rule state
+
+renderLoop :: IORef History -> Rule ColorVec -> IO ()
+renderLoop ref rule = do
+  putStrLn "Starting render loop"
+  (_progName, _args) <- getArgsAndInitialize
+  _window <- createWindow "Cellular Automaton Generator"
+  displayCallback $= display rule ref
+  idleCallback $= Just (idle rule ref)
+  reshapeCallback $= Just reshape
+  keyboardMouseCallback $= Just keyboardMouse
+  mainLoop
+
+color3ify :: Float -> Float -> Float -> ColorVec
+color3ify r g b = Color3 r g b
