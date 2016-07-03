@@ -19,6 +19,4 @@ main :: IO ()
 main = do
     fileName <- fmap head getArgs
     fileContents <- readFile fileName
-    let grid = readGrid fileContents
-    let context = makeBlackBackgroundContext (700, 700)
-    simulateRule context [grid] gameOfLife
+    putStr fileContents

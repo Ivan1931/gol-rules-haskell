@@ -9,9 +9,6 @@ where
 import Gol.Rule
 import Gol.Grid
 import Gol.Render 
-import Graphics.Gloss (simulate)
-import Graphics.Gloss (Display (InWindow))
-import Graphics.Gloss.Data.ViewPort (ViewPort)
 
 {-
  - Simulates a world in perpetuity
@@ -48,19 +45,5 @@ evolveInfinitely :: Rule Cell -> History -> History
 evolveInfinitely rule history =
     runRule rule history : history
 
-simulateRule :: RenderContext -> History -> Rule Cell -> IO ()
-simulateRule context seed rule =
-    let
-        background = backgroundColor context
-        (w, h)     = screenDimensions context
-        dims       = (round w, round h)
-        origin     = (0, 0)
-        evolve     = evolveInfinitely rule
-    in
-        simulate (InWindow "Game of Life" dims origin) 
-                 background
-                 3
-                 seed
-                 (renderHistory context)
-                 (\_ _ history -> evolve history)
-
+simulateRule :: History -> Rule Cell -> IO ()
+simulateRule seed rule = undefined
