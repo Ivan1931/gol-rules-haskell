@@ -4,7 +4,7 @@ import Gol.Rule
 import Gol.Grid
 
 alive = 1.0
-dead = 1.0
+dead = 0.0
 
 relativeFrom :: (X, Y) -> Rule Cell
 relativeFrom (x, y) =
@@ -13,17 +13,20 @@ relativeFrom (x, y) =
 self :: Rule Cell
 self = relativeFrom (0, 0)
 
-surroundingCells :: Rule [Cell]
-surroundingCells = mapM relativeFrom relativePositions
+neighbouringCells :: Rule [Cell]
+neighbouringCells = mapM relativeFrom relativePositions
     where
     relativePositions = [(x, y) | x <- [-1,0,1], y <- [-1, 0, 1], (x, y) /= (0, 0)]
 
-countLivingAround :: Rule Int
-countLivingAround =
+countAround :: (Cell -> Bool) -> Rule Int
+countAround predicate = 
     let
-        countAlive = length . filter (==alive)
+        count = length . filter predicate
     in
-        fmap countAlive surroundingCells
+        fmap count neighbouringCells
+    
+countLivingAround :: Rule Int
+countLivingAround = countAround (==alive)
 
 timeTravel :: Int -> Rule a -> Rule a
 timeTravel lookback (Rule r) =
