@@ -1,6 +1,6 @@
 module Gol.Rule where
 
-import Gol.Grid (Grid, X, Y, Coord, dimensions, applyToGrid, Cell)
+import Gol.Grid (Grid, X, Y, Coord, applyToGrid, Cell)
 
 {-|
  - A rule is a function that takes a history of grids and a cell position and

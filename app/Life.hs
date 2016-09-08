@@ -9,27 +9,30 @@ whiteOut = do
 gameOfLife :: Rule Cell
 gameOfLife = do
     s <- self
-    liveCells <- countLivingAround
-    if s == 1.0 then -- Self is alive
+    liveCells <- countAround (>=1.0)
+    if 1.0 <= s then -- Self is alive
         case liveCells of
             2 -> return 1.0 -- stability
             3 -> return 1.0 -- ^   ^   ^
-            _ -> return 0.0 -- death by overpopulation or underpopulation
+            _ -> return (dieAbit s) -- death by overpopulation or underpopulation
     else
         case liveCells of
             3 -> return 1.0 -- reproduction
-            _ -> return 0.0
+            _ -> return (dieAbit s)
+    where dieAbit a = 0.2 * a
 
-loadWorld :: IO Grid
+loadWorld :: IO ParseResult
 loadWorld = do
     filePath <- head <$> getArgs
     putStrLn ("Read " ++ filePath)
-    readGrid <$> readFile filePath
-
+    parseGrid <$> readFile filePath
 
 main :: IO ()
 main = do
-    grid <- loadWorld
-    putStrLn "Starting world Simulation"
-    simulateRule [grid] gameOfLife whiteOut 
+    parseResult <- loadWorld
+    case parseResult of 
+        Right grid ->  do
+            putStrLn "Starting world Simulation"
+            simulateRule [grid] gameOfLife whiteOut 
+        Left deserializationError -> putStrLn $ errorMessage deserializationError
 

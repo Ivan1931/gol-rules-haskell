@@ -1,7 +1,6 @@
-module GridSpec where
+module GridSpec (spec) where
 
 import Test.Hspec
-import Test.QuickCheck
 import Gol.Grid
 
 sampleDim = 3
@@ -24,4 +23,9 @@ boundsReachAroundSpec = do
         it "(3, 3) refers to top right hand corner (0, 0)" $ do
             (3, 3) `get` sampleBoard `shouldBe` (0, 0) `get` sampleBoard
 
-spec = boundsReachAroundSpec
+otherSpec = do
+    describe "The truth" $ do
+        it "is always true" $ do
+            True `shouldBe` True
+
+spec = boundsReachAroundSpec >> otherSpec

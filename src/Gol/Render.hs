@@ -6,7 +6,7 @@ module Gol.Render
 )
 where
 
-import Gol.Grid (get, getValues, getCells, Cell, Grid, Coord, dimensions)
+import Gol.Grid (get, getValues, getCells, Cell, Grid, Coord, dimension)
 import Gol.Rule
 import Gol.Grid (coordsFor)
 import Graphics.UI.GLUT
@@ -34,7 +34,7 @@ renderSquare (w, h) (x, y) =
 renderScene :: ColorRule -> History -> IO ()
 renderScene (Rule r) history@(mostRecent:_) =
     let
-        (cellWidth, cellHeight) = dimensions mostRecent
+        (cellWidth, cellHeight) = dimension mostRecent
         graphicalWidth = 2.0 / (fromIntegral cellWidth)
         graphicalHeight = 2.0 / (fromIntegral cellHeight)
         renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
