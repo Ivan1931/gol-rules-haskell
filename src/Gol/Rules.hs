@@ -1,35 +1,36 @@
 module Gol.Rules where
 
 import Gol.Rule
-import qualified Data.Map as Map
+import Gol.Grid (Coord, Grid(..))
+import Data.Map (findWithDefault)
 
-alive = 1.0
-dead = 0.0
+relativeFrom :: (Monoid a) => Coord -> Rule a a
+relativeFrom (x, y) = Rule $ \ (Grid _ table) (x', y') -> 
+    let
+        getOrZero = findWithDefault mempty
+    in
+        (x + x', y + y') `getOrZero` table
 
-relativeFrom :: Coord -> Rule Cell
-relativeFrom (x, y) =
-    Rule (\ grid (x', y') -> (x' + x, y' + y) `getOrZero` grid)
-    where getOrZero = Map.findWithDefault 0.0
-
-neighbours :: Rule [Cell]
+neighbours :: (Monoid a) => Rule a [a]
 neighbours = mapM relativeFrom relativePositions
     where
-    relativePositions = [(x, y) | x <- [-1,0,1], y <- [-1, 0, 1], (x, y) /= (0, 0)]
+    relativePositions = [(x, y) | x <- [-1,0,1], 
+                                  y <- [-1, 0, 1], 
+                                  (x, y) /= (0, 0)]
 
-self :: Rule Cell
+self :: (Monoid a) => Rule a a
 self = relativeFrom (0, 0)
 
-neighbouringCells :: Rule [Cell]
+neighbouringCells :: (Monoid a) => Rule a [a]
 neighbouringCells = mapM relativeFrom relativePositions
     where
-    relativePositions = [(x, y) | x <- [-1,0,1], y <- [-1, 0, 1], (x, y) /= (0, 0)]
+    relativePositions = [(x, y) | x <- [-1,0,1], 
+                                  y <- [-1, 0, 1], 
+                                  (x, y) /= (0, 0)]
 
-countAround :: (Cell -> Bool) -> Rule Int
+countAround :: (Monoid a) => (a -> Bool) -> Rule a Int
 countAround predicate = 
     let
         count = length . filter predicate
     in
         fmap count neighbouringCells
-    
-countLivingAround :: Rule Int
-countLivingAround = countAround (==alive)

@@ -1,25 +1,38 @@
 import Gol
 import System.Environment
 
-whiteOut :: Rule ColorVec
+data Cell = Alive | Dead
+          deriving (Eq, Show, Read)
+
+instance Monoid Cell where
+    mempty = Dead
+    mappend Dead Alive = Alive
+    mappend Alive Dead = Alive
+    mappend Alive Alive = Dead
+
+toFloat :: Cell -> Float
+toFloat Alive = 1.0
+toFloat Dead = 0.0
+
+whiteOut :: Rule Cell ColorVec
 whiteOut = do
     s <- self
-    let t = realToFrac s
+    let t = toFloat s
     return $ color3ify t t t
 
-gameOfLife :: Rule Cell
+gameOfLife :: Rule Cell Cell
 gameOfLife = do
     s <- self
-    liveCells <- countAround (>=1.0)
-    if 1.0 <= s then
+    liveCells <- countAround (==Alive)
+    if s == Alive then
         case liveCells of
-            2 -> return 1.0
-            3 -> return 1.0
-            _ -> return 0.0
+            2 -> return Alive
+            3 -> return Alive
+            _ -> return Dead
     else
         case liveCells of
-            3 -> return 1.0
-            _ -> return 0.0
+            3 -> return Alive
+            _ -> return Dead
 
 main :: IO ()
 main = do

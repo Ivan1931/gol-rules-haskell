@@ -1,2 +1,4 @@
-(5, 5)
-fromList [((2,1),1), ((2,2),1), ((2,3),1)]
+Grid {
+    size = (5, 5),
+    table = fromList [((2,1),Alive), ((2,2),Alive), ((2,3),Alive)]
+}

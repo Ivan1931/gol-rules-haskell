@@ -8,13 +8,13 @@ module Gol.Render
 where
 
 import Gol.Rule
-import Gol.Grid
+import Gol.Grid (Grid(..), coordsFor, Coord, GridSize)
 import Graphics.UI.GLUT
 import Data.IORef (IORef, readIORef, newIORef)
 
 type ColorVec = Color3 GLfloat
-type SimulationState = IORef (Grid, GridSize)
-type ColorRule = Rule ColorVec
+type SimulationState c = IORef (Grid c)
+type ColorRule c = Rule c ColorVec
 type Location = (GLfloat, GLfloat)
 type Dimension = (GLfloat, GLfloat)
 
@@ -31,10 +31,10 @@ renderSquare (w, h) (x, y) =
          topY = y
          bottomY = y + h
 
-renderScene :: ColorRule -> Grid -> (Int, Int) -> IO ()
-renderScene (Rule r) grid dimension =
+renderScene :: ColorRule c -> Grid c -> IO ()
+renderScene (Rule r) grid@(Grid size table) =
         let
-            (cellWidth, cellHeight) = dimension
+            (cellWidth, cellHeight) = size
             graphicalWidth = 2.0 / (fromIntegral cellWidth)
             graphicalHeight = 2.0 / (fromIntegral cellHeight)
             renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
@@ -42,7 +42,7 @@ renderScene (Rule r) grid dimension =
                 where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
                       graphicalY = (fromIntegral y) * graphicalHeight - 1.0
         in
-            mapM_ drawCell $ coordsFor cellWidth cellHeight
+            mapM_ drawCell $ coordsFor size
 
 cube :: GLfloat -> IO ()
 cube w = do
@@ -72,11 +72,11 @@ cube w = do
     vertex $ Vertex3 (-w) (-w) (-w)
     vertex $ Vertex3 (-w) w (-w)
 
-unmarshalAndRender :: ColorRule -> SimulationState -> IO ()
+unmarshalAndRender :: ColorRule c -> SimulationState c -> IO ()
 unmarshalAndRender rule ioState = do
-    (grid, dimension) <- readIORef ioState
+    grid <- readIORef ioState
     clear [ColorBuffer]
-    renderScene rule grid dimension
+    renderScene rule grid
     flush
 
 reshape :: ReshapeCallback
@@ -86,13 +86,13 @@ reshape size = do
 keyboardMouse :: KeyboardMouseCallback
 keyboardMouse _key _state _modifiers _position = return ()
 
-display :: ColorRule -> SimulationState -> DisplayCallback
+display :: ColorRule c -> SimulationState c -> DisplayCallback
 display rule ioState = unmarshalAndRender rule ioState
 
-idle :: ColorRule -> SimulationState -> IdleCallback
+idle :: ColorRule c -> SimulationState c -> IdleCallback
 idle rule state = unmarshalAndRender rule state
 
-renderLoop :: SimulationState -> ColorRule -> IO ()
+renderLoop :: SimulationState c -> ColorRule c -> IO ()
 renderLoop ref rule = do
   putStrLn "Starting render loop"
   (_progName, _args) <- getArgsAndInitialize
