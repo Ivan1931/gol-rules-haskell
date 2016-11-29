@@ -3,18 +3,18 @@ module Gol.Render
     renderLoop
     , color3ify
     , ColorVec
+    , SimulationState
 )
 where
 
-import Gol.Grid (get, getValues, getCells, Cell, Grid, Coord, dimension)
 import Gol.Rule
-import Gol.Grid (coordsFor)
+import Gol.Grid
 import Graphics.UI.GLUT
-import Data.IORef (IORef, readIORef)
+import Data.IORef (IORef, readIORef, newIORef)
 
 type ColorVec = Color3 GLfloat
+type SimulationState = IORef (Grid, GridSize)
 type ColorRule = Rule ColorVec
-type SimulationState = IORef History
 type Location = (GLfloat, GLfloat)
 type Dimension = (GLfloat, GLfloat)
 
@@ -31,18 +31,18 @@ renderSquare (w, h) (x, y) =
          topY = y
          bottomY = y + h
 
-renderScene :: ColorRule -> History -> IO ()
-renderScene (Rule r) history@(mostRecent:_) =
-    let
-        (cellWidth, cellHeight) = dimension mostRecent
-        graphicalWidth = 2.0 / (fromIntegral cellWidth)
-        graphicalHeight = 2.0 / (fromIntegral cellHeight)
-        renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
-        drawCell (x, y) = color (r history (x, y)) >> renderSquare' (graphicalX, graphicalY)
-            where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
-                  graphicalY = (fromIntegral y) * graphicalHeight - 1.0
-    in
-        mapM_ drawCell $ coordsFor cellWidth cellHeight
+renderScene :: ColorRule -> Grid -> (Int, Int) -> IO ()
+renderScene (Rule r) grid dimension =
+        let
+            (cellWidth, cellHeight) = dimension
+            graphicalWidth = 2.0 / (fromIntegral cellWidth)
+            graphicalHeight = 2.0 / (fromIntegral cellHeight)
+            renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
+            drawCell (x, y) = color (r grid (x, y)) >> renderSquare' (graphicalX, graphicalY)
+                where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
+                      graphicalY = (fromIntegral y) * graphicalHeight - 1.0
+        in
+            mapM_ drawCell $ coordsFor cellWidth cellHeight
 
 cube :: GLfloat -> IO ()
 cube w = do
@@ -74,9 +74,9 @@ cube w = do
 
 unmarshalAndRender :: ColorRule -> SimulationState -> IO ()
 unmarshalAndRender rule ioState = do
-    state <- readIORef ioState
+    (grid, dimension) <- readIORef ioState
     clear [ColorBuffer]
-    renderScene rule state
+    renderScene rule grid dimension
     flush
 
 reshape :: ReshapeCallback
@@ -92,7 +92,7 @@ display rule ioState = unmarshalAndRender rule ioState
 idle :: ColorRule -> SimulationState -> IdleCallback
 idle rule state = unmarshalAndRender rule state
 
-renderLoop :: IORef History -> Rule ColorVec -> IO ()
+renderLoop :: SimulationState -> ColorRule -> IO ()
 renderLoop ref rule = do
   putStrLn "Starting render loop"
   (_progName, _args) <- getArgsAndInitialize

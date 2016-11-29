@@ -1,14 +1,20 @@
 module Gol.Rules where
 
 import Gol.Rule
-import Gol.Grid
+import qualified Data.Map as Map
 
 alive = 1.0
 dead = 0.0
 
-relativeFrom :: (X, Y) -> Rule Cell
+relativeFrom :: Coord -> Rule Cell
 relativeFrom (x, y) =
-    Rule (\ (h:_) (x', y') -> (x' + x, y' + y) `get` h)
+    Rule (\ grid (x', y') -> (x' + x, y' + y) `getOrZero` grid)
+    where getOrZero = Map.findWithDefault 0.0
+
+neighbours :: Rule [Cell]
+neighbours = mapM relativeFrom relativePositions
+    where
+    relativePositions = [(x, y) | x <- [-1,0,1], y <- [-1, 0, 1], (x, y) /= (0, 0)]
 
 self :: Rule Cell
 self = relativeFrom (0, 0)
@@ -27,7 +33,3 @@ countAround predicate =
     
 countLivingAround :: Rule Int
 countLivingAround = countAround (==alive)
-
-timeTravel :: Int -> Rule a -> Rule a
-timeTravel lookback (Rule r) =
-    Rule (\ history xy -> r (drop lookback history) xy)

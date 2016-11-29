@@ -35,7 +35,6 @@ Library
     , Gol.Rule
     , Gol.Rules
     , Gol.Render
-    , Gol.Serialization
     , Gol.World
   build-depends:
     base >= 4.7 && < 5

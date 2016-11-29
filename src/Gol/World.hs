@@ -1,7 +1,7 @@
 module Gol.World
 (
-    simulateRule
-    , simulateInfinite
+    simulate
+    , simulateWithPath
 )
 where
 
@@ -14,43 +14,50 @@ import Control.Concurrent (forkIO, threadDelay)
 {-
  - Simulates a world in perpetuity
  -}
-simulateInfinite :: History -- ^ Starting History
-        -> Rule Cell  -- ^ Rule on which to run the world
-        -> History
-simulateInfinite history rule =
+simulateInfinite :: Rule Cell  
+        -> Grid
+        -> [Grid]
+simulateInfinite rule grid =
     let
-        next = runRule rule history
+        next = runRule rule grid
     in
-        next : simulateInfinite (next : history) rule
+        next : simulateInfinite rule next
 
-evolveBoundedHistory :: Rule Cell -> Int -> History -> History
-evolveBoundedHistory rule bound history =
-    take bound $ runRule rule history : history
+readGrid :: SimulationState -> IO Grid
+readGrid simState = do
+    (grid, _) <- readIORef simState
+    return grid
 
-evolveInfinitely :: Rule Cell -> History -> History
-evolveInfinitely rule history =
-    runRule rule history : history
+writeGrid :: SimulationState -> Grid -> IO ()
+writeGrid simState nextGrid = do
+    atomicModifyIORef' simState update
+    where update (_, dims) = ((nextGrid, dims), ())
 
-evolutionLoop :: IORef History -> Rule Cell -> IO ()
+
+evolutionLoop :: SimulationState -> Rule Cell -> IO ()
 evolutionLoop ref rule = do
     putStrLn "Starting evolution loop"
-    seed <- readIORef ref
-    mapM_ evolve $ simulateInfinite seed rule
+    (seed, _) <- readIORef ref
+    mapM_ evolve $ simulateInfinite rule seed
     where 
-        update recent history = (recent : history, ())
         millis = 1000
-        evolve recent = do
+        evolve nextGrid = do
             threadDelay (300 * millis)
-            atomicModifyIORef' ref (update recent)
+            writeGrid ref nextGrid
         
 
-simulateRule :: History -> Rule Cell -> Rule ColorVec -> IO ()
-simulateRule [] _ _ = error "Catastrophic failure: Initial automaton state must be provided"
-simulateRule seed evolutionRule colorRule = do
-    ref <- newIORef seed
+simulationLoop :: Rule Cell -> Rule ColorVec -> GridSize -> Grid -> IO ()
+simulationLoop evolutionRule colorRule dimensions seed = do
+    ref <- newIORef (seed, dimensions)
     forkIO (renderLoop ref colorRule)
     evolutionLoop ref evolutionRule
     return ()
 
-    
+simulateWithPath :: Rule Cell -> Rule ColorVec -> FilePath -> IO ()
+simulateWithPath cellRule colorRule path = do
+    contents <- fmap lines $ readFile path
+    let dims = parseGridSize $ head contents
+    let grid = parseGrid dims $ (concat . tail) contents
+    simulationLoop cellRule colorRule dims grid
 
+simulate = simulationLoop

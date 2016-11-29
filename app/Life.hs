@@ -4,35 +4,25 @@ import System.Environment
 whiteOut :: Rule ColorVec
 whiteOut = do
     s <- self
-    return $ color3ify s s s
+    let t = realToFrac s
+    return $ color3ify t t t
 
 gameOfLife :: Rule Cell
 gameOfLife = do
     s <- self
     liveCells <- countAround (>=1.0)
-    if 1.0 <= s then -- Self is alive
+    if 1.0 <= s then
         case liveCells of
-            2 -> return 1.0 -- stability
-            3 -> return 1.0 -- ^   ^   ^
-            _ -> return (dieAbit s) -- death by overpopulation or underpopulation
+            2 -> return 1.0
+            3 -> return 1.0
+            _ -> return 0.0
     else
         case liveCells of
-            3 -> return 1.0 -- reproduction
-            _ -> return (dieAbit s)
-    where dieAbit a = 0.2 * a
-
-loadWorld :: IO ParseResult
-loadWorld = do
-    filePath <- head <$> getArgs
-    putStrLn ("Read " ++ filePath)
-    parseGrid <$> readFile filePath
+            3 -> return 1.0
+            _ -> return 0.0
 
 main :: IO ()
 main = do
-    parseResult <- loadWorld
-    case parseResult of 
-        Right grid ->  do
-            putStrLn "Starting world Simulation"
-            simulateRule [grid] gameOfLife whiteOut 
-        Left deserializationError -> putStrLn $ errorMessage deserializationError
+    filePath <- fmap head getArgs
+    simulateWithPath gameOfLife whiteOut filePath
 
