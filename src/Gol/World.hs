@@ -8,6 +8,7 @@ where
 import Gol.Rule
 import Gol.Grid (Grid, parse)
 import Gol.Render 
+import Data.Default
 import Data.IORef (IORef, newIORef, readIORef, atomicWriteIORef)
 import Control.Concurrent (forkIO, threadDelay)
 
@@ -46,7 +47,7 @@ simulationLoop evolutionRule colorRule seed = do
     evolutionLoop ref evolutionRule
     return ()
 
-simulateWithPath :: (Monoid c, Read c) => Rule c c -> Rule c ColorVec -> FilePath -> IO ()
+simulateWithPath :: (Default c, Read c) => Rule c c -> Rule c ColorVec -> FilePath -> IO ()
 simulateWithPath cellRule colorRule path = do
     grid <- fmap parse $ readFile path
     simulationLoop cellRule colorRule grid

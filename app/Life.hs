@@ -1,24 +1,20 @@
 import Gol
 import System.Environment
+import Data.Default
 
 data Cell = Alive | Dead
           deriving (Eq, Show, Read)
 
-instance Monoid Cell where
-    mempty = Dead
-    mappend Dead Alive = Alive
-    mappend Alive Dead = Alive
-    mappend Alive Alive = Dead
-
-toFloat :: Cell -> Float
-toFloat Alive = 1.0
-toFloat Dead = 0.0
+instance Default Cell where
+    def = Dead
 
 whiteOut :: Rule Cell ColorVec
-whiteOut = do
-    s <- self
-    let t = toFloat s
-    return $ color3ify t t t
+whiteOut =
+    let toFloat Alive = 1.0
+        toFloat Dead  = 0.0
+    in do
+        s <- toFloat <$> self
+        return $ mkColor s s s
 
 gameOfLife :: Rule Cell Cell
 gameOfLife = do

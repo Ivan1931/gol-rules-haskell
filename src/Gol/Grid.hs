@@ -11,6 +11,7 @@ module Gol.Grid (
 ) where
 
 import Data.Map (fromList, union, Map)
+import Data.Default
 
 type GridSize = (Int, Int)
 type Coord = (Int, Int)
@@ -41,5 +42,5 @@ mkGrid size@(width, height) table
     | height < 0 = error "Height is too small"
     | otherwise = Grid size table
 
-parse :: (Read c, Monoid c) => String -> Grid c
-parse = parseWithDefault mempty
+parse :: (Read c, Default c) => String -> Grid c
+parse = parseWithDefault def

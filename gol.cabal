@@ -23,6 +23,7 @@ executable gol
     base >= 4.7 && < 5
     , gol
     , containers
+    , data-default
 
 Library
   hs-source-dirs:      
@@ -43,8 +44,7 @@ Library
     , GLUtil >= 0.9 && < 0.10
     , OpenGLRaw >= 3 && < 3.2
     , GLUT >= 2.0.0 && <= 2.7.0.10
-    , parsec >= 3.1.9 && <= 3.1.11
-    
+    , data-default
 
 Test-suite spec
     Type:

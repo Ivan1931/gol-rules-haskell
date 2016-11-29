@@ -1,7 +1,7 @@
 module Gol.Render
 (
     renderLoop
-    , color3ify
+    , mkColor
     , ColorVec
     , SimulationState
 )
@@ -103,5 +103,5 @@ renderLoop ref rule = do
   keyboardMouseCallback $= Just keyboardMouse
   mainLoop
 
-color3ify :: Float -> Float -> Float -> ColorVec
-color3ify r g b = Color3 r g b
+mkColor :: Float -> Float -> Float -> ColorVec
+mkColor r g b = Color3 r g b
