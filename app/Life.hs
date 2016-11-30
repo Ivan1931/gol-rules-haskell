@@ -1,19 +1,19 @@
-module Main where
+module Life where
 
 import Gol
 import System.Environment
 import Data.Default
 
-data Cell = Dead | Alive
+data Cell = Alive | Empty | Head | Tail | Conductor
           deriving (Eq, Show, Read, Enum)
 
 instance Default Cell where
-    def = Dead
+    def = Empty
 
 whiteOut :: Rule Cell ColorVec
 whiteOut =
     let toFloat Alive = 1.0
-        toFloat Dead  = 0.0
+        toFloat _     = 0.0
     in do
         s <- toFloat <$> self
         return $ mkColor s s s
@@ -26,14 +26,8 @@ gameOfLife = do
         case liveCells of
             2 -> return Alive
             3 -> return Alive
-            _ -> return Dead
+            _ -> return Empty
     else
         case liveCells of
             3 -> return Alive
-            _ -> return Dead
-
-main :: IO ()
-main = do
-    filePath <- head <$> getArgs
-    simulateWithPath gameOfLife whiteOut filePath
-
+            _ -> return Empty

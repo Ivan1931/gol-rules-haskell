@@ -1,4 +1,8 @@
 Grid {
     size = (50, 50),
-    table = fromList [((20,20),Tail),((21,20),Head),((22,20),Conductor),((23,20),Conductor),((24,20),Conductor),((25,20),Conductor),((26,20),Conductor),((27,20),Conductor),((28,20),Conductor),((29,20),Conductor),((30,20),Conductor),((20,21),Conductor),((21,21),Empty),((22,21),Empty),((23,21),Empty),((24,21),Conductor),((20,22),Empty),((21,22),Empty),((22,22),Empty),((23,22),Conductor),((24,22),Conductor),((25,22),Conductor),((20,23),Conductor),((21,23),Empty),((22,23),Empty),((23,23),Empty),((24,23),Conductor),((20,24),Head),((21,24),Tail),((22,24),Conductor),((23,24),Conductor),((24,24),Empty),((25,24),Conductor),((26,24),Conductor),((27,24),Conductor),((28,24),Conductor),((29,24),Conductor),((30,24),Conductor)]
+    table = fromList [((20,20),Tail),((21,20),Head),((22,20),Conductor), ((20,21),Conductor),
+                      ((24,21),Conductor),((23,22),Conductor),((24,22),Conductor),
+                      ((25,22),Conductor),((20,23),Conductor),((24,23),Conductor),
+                      ((20,24),Head),((21,24),Tail),((22,24),Conductor),
+                      ((23,20),Conductor), ((25, 20),Conductor)]
 }

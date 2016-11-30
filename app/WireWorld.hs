@@ -1,21 +1,16 @@
-module Main where
+module WireWorld where
 
 import System.Environment
 import Data.Default
 import Gol
-
-data Wire = Empty | Head | Tail | Conductor
-          deriving (Eq, Show, Read, Enum)
-
-instance Default Wire where
-    def = Empty
+import Life (Cell(..))
 
 red   = mkColor 0.8 0.1 0.1
 green = mkColor 0.1 0.8 0.1
 blue  = mkColor 0.1 0.1 0.8
 yellow = mkColor 1.0 0.8 0.02
 
-colorWireWorld :: Rule Wire ColorVec
+colorWireWorld :: Rule Cell ColorVec
 colorWireWorld = do
     s <- self
     return $
@@ -25,7 +20,7 @@ colorWireWorld = do
             Tail      -> red
             Conductor -> yellow
 
-wireWorld :: Rule Wire Wire
+wireWorld :: Rule Cell Cell
 wireWorld = do
     s <- self
     n <- countAround (==Head)
@@ -37,7 +32,3 @@ wireWorld = do
                 Conductor
         Empty    -> Empty
         _        -> succ s
-
-main = do
-    filePath <- head <$> getArgs
-    simulateWithPath wireWorld colorWireWorld filePath
