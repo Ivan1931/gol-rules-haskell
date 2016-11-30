@@ -1,9 +1,11 @@
+module Main where
+
 import Gol
 import System.Environment
 import Data.Default
 
-data Cell = Alive | Dead
-          deriving (Eq, Show, Read)
+data Cell = Dead | Alive
+          deriving (Eq, Show, Read, Enum)
 
 instance Default Cell where
     def = Dead
@@ -32,6 +34,6 @@ gameOfLife = do
 
 main :: IO ()
 main = do
-    filePath <- fmap head getArgs
+    filePath <- head <$> getArgs
     simulateWithPath gameOfLife whiteOut filePath
 

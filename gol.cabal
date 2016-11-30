@@ -25,6 +25,20 @@ executable gol
     , containers
     , data-default
 
+executable ww
+  hs-source-dirs:      
+    app
+  main-is:             
+    WireWorld.hs
+  default-language:    
+    Haskell2010
+  build-depends:       
+    base >= 4.7 && < 5
+    , gol
+    , containers
+    , data-default
+
+
 Library
   hs-source-dirs:      
     src
