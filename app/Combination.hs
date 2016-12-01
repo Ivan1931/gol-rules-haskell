@@ -3,35 +3,34 @@ module Combination where
 import Gol
 import Life
 import WireWorld
+import Data.Default
+import Control.Monad (liftM2)
 
 comeAlive :: Rule Cell Cell
 comeAlive = do
     s <- self
-    heads <- countAround (==Head)
+    n <- countAround (==Head)
     return $
-        if 2 <= heads then
+        if s == def && n == 1 then
             Alive
         else
-            s
+            def
             
-    
--- A head wire set's an empty sell to alive
--- But kills a living cell
 gameOfWireWorld :: Rule Cell Cell
-gameOfWireWorld = do
-    w <- wireWorld
-    g <- gameOfLife
-    c <- comeAlive
-    return $ 
-        case (c, g, w) of
-            (Alive, _, Empty) -> Alive
-            (_, Alive, Empty) -> Alive
-            _                 -> w
+gameOfWireWorld = liftM2 pick gameOfLife wireWorld
+    where pick Alive Empty     = Alive
+          pick Empty Alive     = Empty
+          pick _     a         = a
+
+gameOfWireWorldComingAlive :: Rule Cell Cell
+gameOfWireWorldComingAlive = liftM2 pick gameOfWireWorld comeAlive
+    where pick Empty Alive = Alive
+          pick a     _     = a
 
 colorGameOfWires :: Rule Cell ColorVec
 colorGameOfWires = do
     s <- self
     if s == Alive then
-        whiteOut
+        colorGameOfLife
     else
         colorWireWorld

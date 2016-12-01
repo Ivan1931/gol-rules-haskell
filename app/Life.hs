@@ -10,8 +10,8 @@ data Cell = Alive | Empty | Head | Tail | Conductor
 instance Default Cell where
     def = Empty
 
-whiteOut :: Rule Cell ColorVec
-whiteOut =
+colorGameOfLife :: Rule Cell ColorVec
+colorGameOfLife =
     let toFloat Alive = 1.0
         toFloat _     = 0.0
     in do
@@ -26,8 +26,8 @@ gameOfLife = do
         case liveCells of
             2 -> return Alive
             3 -> return Alive
-            _ -> return Empty
+            _ -> return def
     else
         case liveCells of
             3 -> return Alive
-            _ -> return Empty
+            _ -> return def

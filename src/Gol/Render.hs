@@ -18,18 +18,27 @@ type ColorRule c = Rule c ColorVec
 type Location = (GLfloat, GLfloat)
 type Dimension = (GLfloat, GLfloat)
 
-renderSquare :: Dimension -> Location -> IO ()
-renderSquare (w, h) (x, y) =
-    renderPrimitive Quads $ do
-        vertex $ Vertex2 leftX topY
-        vertex $ Vertex2 rightX topY
-        vertex $ Vertex2 rightX bottomY
-        vertex $ Vertex2 leftX bottomY
+renderSquare :: Dimension -> ColorVec -> ColorVec -> Location -> IO ()
+renderSquare (w, h) squareColor lineColor (x, y) = do
+    color squareColor
+    renderPrimitive Quads quad
+    color lineColor
+    renderPrimitive Lines line
     where
          leftX = x
          rightX = x + w
          topY = y
          bottomY = y + h
+         quad = do
+            vertex $ Vertex2 leftX topY
+            vertex $ Vertex2 rightX topY
+            vertex $ Vertex2 rightX bottomY
+            vertex $ Vertex2 leftX bottomY
+         line = quad >> do
+            vertex $ Vertex2 leftX topY
+            vertex $ Vertex2 leftX bottomY
+            vertex $ Vertex2 rightX topY
+            vertex $ Vertex2 rightX bottomY
 
 renderScene :: ColorRule c -> Grid c -> IO ()
 renderScene (Rule r) grid@(Grid size table) =
@@ -37,40 +46,16 @@ renderScene (Rule r) grid@(Grid size table) =
             (cellWidth, cellHeight) = size
             graphicalWidth = 2.0 / (fromIntegral cellWidth)
             graphicalHeight = 2.0 / (fromIntegral cellHeight)
-            renderSquare' = renderSquare (graphicalWidth, graphicalHeight)
-            drawCell (x, y) = color (r grid (x, y)) >> renderSquare' (graphicalX, graphicalY)
+            drawCell (x, y) = renderSquare  (graphicalWidth, graphicalHeight) 
+                                            squareColor 
+                                            lineColor
+                                            (graphicalX, graphicalY)
                 where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
                       graphicalY = (fromIntegral y) * graphicalHeight - 1.0
+                      squareColor@(Color3 r' g' b') = r grid (x, y)
+                      lineColor = mkColor (1.0 - r' / 3.0) (1.0 - g' / 3.0) (1.0 - b' / 3.0)
         in
             mapM_ drawCell $ coordsFor size
-
-cube :: GLfloat -> IO ()
-cube w = do
-  renderPrimitive Quads $ do
-    vertex $ Vertex3 w w w
-    vertex $ Vertex3 w w (-w)
-    vertex $ Vertex3 w (-w) (-w)
-    vertex $ Vertex3 w (-w) w
-    vertex $ Vertex3 w w w
-    vertex $ Vertex3 w w (-w)
-    vertex $ Vertex3 (-w) w (-w)
-    vertex $ Vertex3 (-w) w w
-    vertex $ Vertex3 w w w
-    vertex $ Vertex3 w (-w) w
-    vertex $ Vertex3 (-w) (-w) w
-    vertex $ Vertex3 (-w) w w
-    vertex $ Vertex3 (-w) w w
-    vertex $ Vertex3 (-w) w (-w)
-    vertex $ Vertex3 (-w) (-w) (-w)
-    vertex $ Vertex3 (-w) (-w) w
-    vertex $ Vertex3 w (-w) w
-    vertex $ Vertex3 w (-w) (-w)
-    vertex $ Vertex3 (-w) (-w) (-w)
-    vertex $ Vertex3 (-w) (-w) w
-    vertex $ Vertex3 w w (-w)
-    vertex $ Vertex3 w (-w) (-w)
-    vertex $ Vertex3 (-w) (-w) (-w)
-    vertex $ Vertex3 (-w) w (-w)
 
 unmarshalAndRender :: ColorRule c -> SimulationState c -> IO ()
 unmarshalAndRender rule ioState = do

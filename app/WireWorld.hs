@@ -26,9 +26,11 @@ wireWorld = do
     n <- countAround (==Head)
     return $ case s of
         Conductor ->
-            if n == 2 || n == 1 then
+            if n == 1 || n == 2 then
                 Head
             else
                 Conductor
         Empty    -> Empty
-        _        -> succ s
+        Head     -> Tail
+        Tail     -> Conductor
+        a        -> a

@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Gol.Rule where
 
 import Gol.Grid
