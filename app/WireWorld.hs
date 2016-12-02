@@ -5,20 +5,20 @@ import Data.Default
 import Gol
 import Life (Cell(..))
 
-red   = mkColor 0.8 0.1 0.1
-green = mkColor 0.1 0.8 0.1
-blue  = mkColor 0.1 0.1 0.8
-yellow = mkColor 1.0 0.8 0.02
+red   = mkColorRGB 192 57 43
+blue  = mkColorRGB 41 128 185
+yellow = mkColorRGB 255 111 0
+empty = mkColorRGB 38 50 56
 
 colorWireWorld :: Rule Cell ColorVec
 colorWireWorld = do
     s <- self
     return $
         case s of
-            Empty     -> green
             Head      -> blue
             Tail      -> red
             Conductor -> yellow
+            _         -> empty
 
 wireWorld :: Rule Cell Cell
 wireWorld = do

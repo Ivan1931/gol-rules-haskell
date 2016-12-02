@@ -2,6 +2,7 @@ module Gol.Render
 (
     renderLoop
     , mkColor
+    , mkColorRGB
     , ColorVec
     , SimulationState
 )
@@ -52,8 +53,9 @@ renderScene (Rule r) grid@(Grid size table) =
                                             (graphicalX, graphicalY)
                 where graphicalX = (fromIntegral x) * graphicalWidth - 1.0
                       graphicalY = (fromIntegral y) * graphicalHeight - 1.0
+                      col c = sin (c * pi)
                       squareColor@(Color3 r' g' b') = r grid (x, y)
-                      lineColor = mkColor (1.0 - r' / 3.0) (1.0 - g' / 3.0) (1.0 - b' / 3.0)
+                      lineColor = mkColor (col r') (col g') (col b')
         in
             mapM_ drawCell $ coordsFor size
 
@@ -90,3 +92,8 @@ renderLoop ref rule = do
 
 mkColor :: Float -> Float -> Float -> ColorVec
 mkColor r g b = Color3 r g b
+
+mkColorRGB :: Int -> Int -> Int -> ColorVec
+mkColorRGB r g b = mkColor (fromIntegral r/255) 
+                           (fromIntegral g/255) 
+                           (fromIntegral b/255)

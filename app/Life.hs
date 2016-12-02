@@ -11,12 +11,11 @@ instance Default Cell where
     def = Empty
 
 colorGameOfLife :: Rule Cell ColorVec
-colorGameOfLife =
-    let toFloat Alive = 1.0
-        toFloat _     = 0.0
-    in do
-        s <- toFloat <$> self
-        return $ mkColor s s s
+colorGameOfLife = do
+    s <- self
+    return $ case s of
+        Alive -> mkColorRGB 102 187 106
+        _     -> mkColorRGB 38 50 56
 
 gameOfLife :: Rule Cell Cell
 gameOfLife = do
